@@ -29,7 +29,7 @@ func TestSatisfiesIOCloser(t *testing.T) {
 	_ = c
 }
 
-func TestLogRotate(t *testing.T) {
+func TestLogRotate(t *testing.T) { // nolint:funlen
 	testCases := []struct {
 		Name        string
 		FixArgs     func([]rotatelogs.Option, string) []rotatelogs.Option
@@ -147,7 +147,7 @@ func TestLogRotate(t *testing.T) {
 			clock.Advance(7 * 24 * time.Hour)
 
 			// This next Write() should trigger Rotate()
-			rl.Write([]byte(str))
+			_, _ = rl.Write([]byte(str))
 			newfn := rl.CurrentFileName()
 			if newfn == fn {
 				t.Errorf(`New file name and old file name should not match ("%s" != "%s")`, fn, newfn)
@@ -186,8 +186,8 @@ func CreateRotationTestFile(dir string, base time.Time, d time.Duration, n int) 
 		// %Y%m%d%H%M%S
 		suffix := timestamp.Format("20060102150405")
 		path := filepath.Join(dir, "log"+suffix)
-		ioutil.WriteFile(path, []byte("rotation test file\n"), os.ModePerm)
-		os.Chtimes(path, timestamp, timestamp)
+		_ = os.WriteFile(path, []byte("rotation test file\n"), os.ModePerm)
+		_ = os.Chtimes(path, timestamp, timestamp)
 		timestamp = timestamp.Add(d)
 	}
 }
@@ -366,7 +366,7 @@ func TestRotationGenerationalNames(t *testing.T) {
 
 		seen := map[string]struct{}{}
 		for i := 0; i < 10; i++ {
-			rl.Write([]byte("Hello, World!"))
+			_, _ = rl.Write([]byte("Hello, World!"))
 			if !assert.NoError(t, rl.Rotate(), "rl.Rotate should succeed") {
 				return
 			}
@@ -378,7 +378,7 @@ func TestRotationGenerationalNames(t *testing.T) {
 			if !assert.True(t, strings.HasPrefix(fn, "unchanged-pattern.log"), "prefix for all filenames should match") {
 				return
 			}
-			rl.Write([]byte("Hello, World!"))
+			_, _ = rl.Write([]byte("Hello, World!"))
 			suffix := strings.TrimPrefix(fn, "unchanged-pattern.log")
 			expectedSuffix := fmt.Sprintf(".%d", i+1)
 			if !assert.True(t, suffix == expectedSuffix, "expected suffix %s found %s", expectedSuffix, suffix) {
@@ -414,7 +414,7 @@ func TestRotationGenerationalNames(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			time.Sleep(time.Second)
-			rl.Write([]byte("Hello, World!"))
+			_, _ = rl.Write([]byte("Hello, World!"))
 			if !assert.NoError(t, rl.Rotate(), "rl.Rotate should succeed") {
 				return
 			}
@@ -475,7 +475,7 @@ func TestGHIssue23(t *testing.T) {
 				}
 
 				t.Logf("expected %s", test.Expected)
-				rl.Rotate()
+				_ = rl.Rotate()
 				if !assert.Equal(t, test.Expected, rl.CurrentFileName(), "file names should match") {
 					return
 				}
@@ -489,7 +489,9 @@ func TestForceNewFile(t *testing.T) {
 	if !assert.NoError(t, err, `creating temporary directory should succeed`) {
 		return
 	}
-	defer os.RemoveAll(dir)
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(dir)
 
 	t.Run("Force a new file", func(t *testing.T) {
 		rl, err := rotatelogs.New(
@@ -499,8 +501,8 @@ func TestForceNewFile(t *testing.T) {
 		if !assert.NoError(t, err, "rotatelogs.New should succeed") {
 			return
 		}
-		rl.Write([]byte("Hello, World!"))
-		rl.Close()
+		_, _ = rl.Write([]byte("Hello, World!"))
+		_ = rl.Close()
 
 		for i := 0; i < 10; i++ {
 			baseFn := filepath.Join(dir, "force-new-file.log")
@@ -511,9 +513,9 @@ func TestForceNewFile(t *testing.T) {
 			if !assert.NoError(t, err, "rotatelogs.New should succeed") {
 				return
 			}
-			rl.Write([]byte("Hello, World"))
-			rl.Write([]byte(fmt.Sprintf("%d", i)))
-			rl.Close()
+			_, _ = rl.Write([]byte("Hello, World"))
+			_, _ = rl.Write([]byte(fmt.Sprintf("%d", i)))
+			_ = rl.Close()
 
 			fn := filepath.Base(rl.CurrentFileName())
 			suffix := strings.TrimPrefix(fn, "force-new-file.log")
@@ -551,14 +553,14 @@ func TestForceNewFile(t *testing.T) {
 		if !assert.NoError(t, err, "rotatelogs.New should succeed") {
 			return
 		}
-		rl.Write([]byte("Hello, World!"))
+		_, _ = rl.Write([]byte("Hello, World!"))
 
 		for i := 0; i < 10; i++ {
 			if !assert.NoError(t, rl.Rotate(), "rl.Rotate should succeed") {
 				return
 			}
-			rl.Write([]byte("Hello, World"))
-			rl.Write([]byte(fmt.Sprintf("%d", i)))
+			_, _ = rl.Write([]byte("Hello, World"))
+			_, _ = rl.Write([]byte(fmt.Sprintf("%d", i)))
 			assert.FileExists(t, rl.CurrentFileName(), "file does not exist %s", rl.CurrentFileName())
 			content, err := ioutil.ReadFile(rl.CurrentFileName())
 			if !assert.NoError(t, err, "ioutil.ReadFile %s should succeed", rl.CurrentFileName()) {

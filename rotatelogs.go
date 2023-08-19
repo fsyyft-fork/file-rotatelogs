@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/lestrrat-go/file-rotatelogs/internal/fileutil"
-	strftime "github.com/lestrrat-go/strftime"
+	"github.com/lestrrat-go/strftime"
 	"github.com/pkg/errors"
 )
 
@@ -48,28 +48,28 @@ func New(p string, options ...Option) (*RotateLogs, error) {
 	for _, o := range options {
 		switch o.Name() {
 		case optkeyClock:
-			clock = o.Value().(Clock)
+			clock = o.Value().(Clock) // nolint:errcheck
 		case optkeyLinkName:
-			linkName = o.Value().(string)
+			linkName = o.Value().(string) // nolint:errcheck
 		case optkeyMaxAge:
-			maxAge = o.Value().(time.Duration)
+			maxAge = o.Value().(time.Duration) // nolint:errcheck
 			if maxAge < 0 {
 				maxAge = 0
 			}
 		case optkeyRotationTime:
-			rotationTime = o.Value().(time.Duration)
+			rotationTime = o.Value().(time.Duration) // nolint:errcheck
 			if rotationTime < 0 {
 				rotationTime = 0
 			}
 		case optkeyRotationSize:
-			rotationSize = o.Value().(int64)
+			rotationSize = o.Value().(int64) // nolint:errcheck
 			if rotationSize < 0 {
 				rotationSize = 0
 			}
 		case optkeyRotationCount:
-			rotationCount = o.Value().(uint)
+			rotationCount = o.Value().(uint) // nolint:errcheck
 		case optkeyHandler:
-			handler = o.Value().(Handler)
+			handler = o.Value().(Handler) // nolint:errcheck
 		case optkeyForceNewFile:
 			forceNewFile = true
 		}
