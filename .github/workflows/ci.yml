@@ -26,7 +26,9 @@ jobs:
           echo "::add-path::$HOME/gotip/bin"
           echo "::add-path::$(go env GOPATH)/bin"
       - name: Install GolangCI-Lint
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin 1.54.1
+        run:
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.1
+          golangci-lint --version
       - name: Test with coverage
         run: make cover
       - name: Upload code coverage to codecov
